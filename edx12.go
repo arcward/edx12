@@ -663,7 +663,7 @@ type ISAHeader struct {
 func (i ISAHeader) String() string {
 	s, err := json.Marshal(i)
 	if err != nil {
-		log.Printf("err: %v", err)
+		//log.Printf("err: %v", err)
 		return fmt.Sprintf("%#v", i)
 	}
 	return string(s)
@@ -691,11 +691,11 @@ func (i ISAHeader) String() string {
 //}
 
 type Message struct {
-	Header            *X12Node
-	Trailer           *X12Node
-	SegmentTerminator rune `json:"segment_terminator"`
-	ElementSeparator  rune `json:"element_separator"`
-	functionalGroups  []*FunctionalGroupNode
+	Header            *X12Node               `json:"header"`
+	Trailer           *X12Node               `json:"trailer"`
+	SegmentTerminator rune                   `json:"segmentTerminator"`
+	ElementSeparator  rune                   `json:"elementSeparator"`
+	functionalGroups  []*FunctionalGroupNode `json:"functionalGroups"`
 	*X12Node
 }
 
@@ -897,18 +897,18 @@ func (n *Message) SetComponentElementSeparator(value rune) error {
 }
 
 type FunctionalGroupNode struct {
-	Header                *X12Node
-	Trailer               *X12Node
-	IdentifierCode        string // GS01
-	ReceiverCode          string // GS02
-	SenderCode            string // GS03
-	Date                  string // GS04
-	Time                  string // GS05
-	ControlNumber         string // GS06
-	ResponsibleAgencyCode string // GS07
-	Version               string // GS08
-	Transactions          []*TransactionSetNode
-	Message               *Message
+	Header                *X12Node              `json:"-"`
+	Trailer               *X12Node              `json:"-"`
+	IdentifierCode        string                // GS01 `json:"identifierCode"
+	ReceiverCode          string                // GS02 `json:"receiverCode"`
+	SenderCode            string                // GS03 `json:"senderCode"`
+	Date                  string                // GS04 `json:"date"`
+	Time                  string                // GS05 `json:"time"`
+	ControlNumber         string                // GS06 `json:"controlNumber"`
+	ResponsibleAgencyCode string                // GS07 `json:"responsibleAgencyCode"`
+	Version               string                // GS08 `json:"version"`
+	Transactions          []*TransactionSetNode `json:"transactions"`
+	Message               *Message              `json:"-"`
 	*X12Node
 }
 
@@ -1465,10 +1465,10 @@ func createHierarchicalLevels(transactionSetNode *X12Node) (
 		if hlNode.hasParentLevel() {
 			parentNode, ok := levels[hlNode.parentId]
 			if !ok {
-				log.Printf(
-					"parent node with id '%s' not found",
-					hlNode.parentId,
-				)
+				//log.Printf(
+				//	"parent node with id '%s' not found",
+				//	hlNode.parentId,
+				//)
 				//return parentLevels, nil
 				// TODO: uncomment
 				return parentLevels, newError(
@@ -1482,10 +1482,10 @@ func createHierarchicalLevels(transactionSetNode *X12Node) (
 			hlNode.ParentLevel = parentNode
 			parentNode.ChildLevels = append(parentNode.ChildLevels, hlNode)
 			if !parentNode.hasChildLevels() {
-				log.Printf(
-					"parent node with id '%s' does not have child levels",
-					hlNode.parentId,
-				)
+				//log.Printf(
+				//	"parent node with id '%s' does not have child levels",
+				//	hlNode.parentId,
+				//)
 				//return parentLevels, nil
 				return parentLevels, newError(
 					hlNode.Node,
@@ -1768,9 +1768,9 @@ func defaultSegmentObj(x *X12Spec) (n *X12Node, err error) {
 		childSpec := x.Structure[i]
 		if childSpec.Required() {
 			defaultVal, e := childSpec.defaultObjValue()
-			if e != nil {
-				log.Printf("failed on %s: %s", childSpec.Name, e.Error())
-			}
+			//if e != nil {
+			//	log.Printf("failed on %s: %s", childSpec.Name, e.Error())
+			//}
 
 			errs = append(errs, e)
 			elemInd := i + 1
@@ -1829,9 +1829,9 @@ func (n *X12Node) Segments() []*X12Node {
 	segs := []*X12Node{}
 
 	for _, child := range n.Children {
-		if child == nil {
-			log.Printf("nil child under %s", n.Name)
-		}
+		//if child == nil {
+		//	log.Printf("nil child under %s", n.Name)
+		//}
 		if child.Type == SegmentNode {
 			segs = append(segs, child)
 		} else {
@@ -2837,7 +2837,7 @@ func newLoopTransformer(
 	}
 	err = parentLoop.SetSpec(loopSpec)
 	if err != nil {
-		log.Printf("unable to set spec: %s", err.Error())
+		//log.Printf("unable to set spec: %s", err.Error())
 		return nil, err
 	}
 	builder.createdLoop = parentLoop
@@ -3031,7 +3031,7 @@ func (v *loopTransformer) VisitSegmentSpec(segmentSpec *X12Spec) {
 			segment := matches[occurrence]
 			segment.Occurrence = occurrence
 			if err := segment.SetSpec(segmentSpec); err != nil {
-				log.Printf("unable to set spec: %s", err.Error())
+				//log.Printf("unable to set spec: %s", err.Error())
 				v.ErrorLog = append(v.ErrorLog, err)
 			}
 			v.Children = append(v.Children, segment)
@@ -3162,7 +3162,7 @@ func payloadFromX12(n *X12Node) (map[string]any, error) {
 
 	for i := 0; i < len(n.Children); i++ {
 		childNode := n.Children[i]
-		if childNode.Spec == nil {
+		if childNode.Spec == nil && (childNode.Type != GroupNode && childNode.Type != MessageNode) {
 			payloadErrs = append(
 				payloadErrs,
 				fmt.Errorf(
@@ -3173,7 +3173,7 @@ func payloadFromX12(n *X12Node) (map[string]any, error) {
 			)
 			continue
 		}
-		if childNode.Spec.NotUsed() {
+		if (childNode.Type != GroupNode && childNode.Type != MessageNode) && childNode.Spec.NotUsed() {
 			continue
 		}
 
@@ -3216,7 +3216,6 @@ func payloadFromX12(n *X12Node) (map[string]any, error) {
 			} else {
 				payload[childNode.Spec.Label] = childVal
 			}
-
 		case LoopNode:
 			childVal, loopErr := childNode.Payload()
 			payloadErrs = append(payloadErrs, loopErr)
@@ -3245,6 +3244,27 @@ func payloadFromX12(n *X12Node) (map[string]any, error) {
 			} else {
 				payload[childNode.Spec.Label] = childVal
 			}
+		case GroupNode:
+			groupLabel := "functionalGroups"
+			_, ok := payload[groupLabel]
+			if !ok {
+				var tmpval []map[string]any
+				payload[groupLabel] = tmpval
+			}
+			val := payload[groupLabel]
+			gvv, ok := val.([]map[string]any)
+			if !ok {
+				return payload, newError(
+					childNode,
+					fmt.Errorf(
+						"expected []map[string]any, got %T",
+						payload[groupLabel],
+					),
+				)
+			}
+			groupVal, groupErr := childNode.Payload()
+			payloadErrs = append(payloadErrs, groupErr)
+			payload[groupLabel] = append(gvv, groupVal)
 		default:
 			return payload, newError(
 				childNode,
@@ -3313,6 +3333,8 @@ func (n *X12Node) Payload() (
 		payload, err = payloadFromLoop(n)
 	case CompositeNode:
 		payload, err = payloadFromComposite(n)
+	case MessageNode, GroupNode:
+		payload, err = payloadFromX12(n)
 	default:
 		return payload, newError(
 			n,

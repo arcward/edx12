@@ -850,13 +850,13 @@ func transactionTrailerSpec() (spec *X12Spec, err error) {
 }
 
 func init() {
-	specs, err := loadTransactionSpecFiles(&x12Specs)
+	_, err := loadTransactionSpecFiles(&x12Specs)
 	if err != nil {
 		log.Fatalf("error loading transaction specs: %s", err)
 	}
-	for _, s := range specs {
-		log.Printf("loaded: %s/%s (%s)", s.TransactionSetCode, s.Version, s.Key)
-	}
+	//for _, s := range specs {
+	//	log.Printf("loaded: %s/%s (%s)", s.TransactionSetCode, s.Version, s.Key)
+	//}
 
 }
 
@@ -867,7 +867,7 @@ func Register(spec *X12TransactionSetSpec) error {
 	if _, hasKey := transactionSpecs[spec.Key]; hasKey {
 		return fmt.Errorf("duplicate transaction set spec: %s", spec.Key)
 	}
-	log.Printf("registered: %s", spec.Key)
+	//log.Printf("registered: %s", spec.Key)
 	transactionSpecs[spec.Key] = spec
 	return nil
 }
@@ -876,7 +876,7 @@ func Register(spec *X12TransactionSetSpec) error {
 func clearRegisteredSpecs() {
 	for k := range transactionSpecs {
 		delete(transactionSpecs, k)
-		log.Printf("deregsitered: %s", k)
+		//log.Printf("deregsitered: %s", k)
 	}
 }
 

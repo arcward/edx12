@@ -34,21 +34,21 @@ func TestLoadSpecs(t *testing.T) {
 	specs, err := loadTransactionSpecFiles(&x12Specs)
 	assertNoError(t, err)
 	assertEqual(t, len(specs), 3)
-	for _, s := range specs {
-		t.Logf("spec: %s: %#v", s.TransactionSetCode, s)
-		//for _, subSpec := range s.Structure {
-		//	t.Logf("subspec: %s: %#v", subSpec.Name, subSpec)
-		//}
-		//newData, err := json.MarshalIndent(s, "", "  ")
-		//if err != nil {
-		//	t.Fatalf("expected no error, got %s", err.Error())
-		//}
-		//t.Logf("pretty:\n%s", string(newData))
+	//for _, s := range specs {
+	//	t.Logf("spec: %s: %#v", s.TransactionSetCode, s)
+	//for _, subSpec := range s.Structure {
+	//	t.Logf("subspec: %s: %#v", subSpec.Name, subSpec)
+	//}
+	//newData, err := json.MarshalIndent(s, "", "  ")
+	//if err != nil {
+	//	t.Fatalf("expected no error, got %s", err.Error())
+	//}
+	//t.Logf("pretty:\n%s", string(newData))
 
-		//for k, v := range s.PathMap {
-		//	t.Logf("path: %s: [%s] %s", k, v.Type, v.Name)
-		//}
-	}
+	//for k, v := range s.PathMap {
+	//	t.Logf("path: %s: [%s] %s", k, v.Type, v.Name)
+	//}
+	//}
 }
 
 func TestGroupSegmentsBySegmentId(t *testing.T) {

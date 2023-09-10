@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -54,7 +53,7 @@ func UnmarshalText(text []byte, msg *Message) (err error) {
 	}
 
 	isaNode := &X12Node{Type: SegmentNode, Name: isaSegmentId}
-	log.Printf("spec: %#v", isaSpec)
+	//log.Printf("spec: %#v", isaSpec)
 	if err = isaNode.SetSpec(isaSpec); err != nil {
 		return err
 	}
@@ -79,12 +78,12 @@ func UnmarshalText(text []byte, msg *Message) (err error) {
 		segmentLines[0],
 		string(msg.ElementSeparator),
 	)
-	log.Printf("elems: %#v", isaSegmentElements)
+	//log.Printf("elems: %#v", isaSegmentElements)
 	names := []string{}
 	for i := 0; i < len(isaNode.Children); i++ {
 		names = append(names, isaNode.Children[i].Name)
 	}
-	log.Printf("children: %#v", names)
+	//log.Printf("children: %#v", names)
 	for elemInd, elemVal := range isaSegmentElements {
 		if len(isaNode.Children) <= elemInd {
 			return newError(
