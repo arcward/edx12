@@ -1,0 +1,211 @@
+{
+  "name": "ISA",
+  "usage": "REQUIRED",
+  "description": "Interchange control header",
+  "type": "Segment",
+  "label": "interchangeControlHeader",
+  "repeatMax": 1,
+  "structure": [
+    {
+      "name": "ISA01",
+      "usage": "REQUIRED",
+      "description": "I01 authorization information qualifier",
+      "type": "Element",
+      "label": "AuthorizationQualifier",
+      "minLength": 2,
+      "maxLength": 2,
+      "validCodes": [
+        "00",
+        "03"
+      ],
+      "dataType": "ID"
+    },
+    {
+      "name": "ISA02",
+      "usage": "REQUIRED",
+      "description": "I02 authorization information",
+      "type": "Element",
+      "label": "AuthorizationInformation",
+      "minLength": 10,
+      "maxLength": 10,
+      "dataType": "AN"
+    },
+    {
+      "name": "ISA03",
+      "usage": "REQUIRED",
+      "description": "I03 security information qualifier",
+      "type": "Element",
+      "label": "SecurityInformationQualifier",
+      "minLength": 2,
+      "maxLength": 2,
+      "validCodes": [
+        "00",
+        "01"
+      ],
+      "dataType": "ID"
+    },
+    {
+      "name": "ISA04",
+      "usage": "REQUIRED",
+      "description": "I04 security information",
+      "type": "Element",
+      "label": "SecurityInformation",
+      "minLength": 10,
+      "maxLength": 10,
+      "dataType": "AN"
+    },
+    {
+      "name": "ISA05",
+      "usage": "REQUIRED",
+      "description": "I05 sender id qualifier",
+      "type": "Element",
+      "label": "SenderIdQualifier",
+      "minLength": 2,
+      "maxLength": 2,
+      "validCodes": [
+        "14",
+        "20",
+        "27",
+        "28",
+        "29",
+        "30",
+        "33",
+        "ZZ"
+      ],
+      "dataType": "ID"
+    },
+    {
+      "name": "ISA06",
+      "usage": "REQUIRED",
+      "description": "I06 sender id",
+      "type": "Element",
+      "label": "SenderId",
+      "minLength": 15,
+      "maxLength": 15,
+      "dataType": "AN"
+    },
+    {
+      "name": "ISA07",
+      "usage": "REQUIRED",
+      "description": "I05 receiver id qualifier",
+      "type": "Element",
+      "label": "ReceiverIdQualifier",
+      "minLength": 2,
+      "maxLength": 2,
+      "validCodes": [
+        "14",
+        "20",
+        "27",
+        "28",
+        "29",
+        "30",
+        "33",
+        "ZZ"
+      ],
+      "dataType": "ID"
+    },
+    {
+      "name": "ISA08",
+      "usage": "REQUIRED",
+      "description": "I07 receiver id",
+      "type": "Element",
+      "label": "ReceiverId",
+      "minLength": 15,
+      "maxLength": 15,
+      "dataType": "AN"
+    },
+    {
+      "name": "ISA09",
+      "usage": "REQUIRED",
+      "description": "I08 interchange date",
+      "type": "Element",
+      "label": "Date",
+      "minLength": 6,
+      "maxLength": 6,
+      "dataType": "DT"
+    },
+    {
+      "name": "ISA10",
+      "usage": "REQUIRED",
+      "description": "I09 interchange time",
+      "type": "Element",
+      "label": "Time",
+      "minLength": 4,
+      "maxLength": 4,
+      "dataType": "TM"
+    },
+    {
+      "name": "ISA11",
+      "usage": "REQUIRED",
+      "description": "I10 repetition separator",
+      "default": "^",
+      "type": "Element",
+      "label": "RepetitionSeparator",
+      "minLength": 1,
+      "maxLength": 1,
+      "dataType": "AN"
+    },
+    {
+      "name": "ISA12",
+      "usage": "REQUIRED",
+      "description": "I11 control version number",
+      "type": "Element",
+      "label": "ControlVersionNumber",
+      "minLength": 5,
+      "maxLength": 5,
+      "validCodes": [
+        "00501"
+      ],
+      "dataType": "ID"
+    },
+    {
+      "name": "ISA13",
+      "usage": "REQUIRED",
+      "description": "I12 control number",
+      "type": "Element",
+      "label": "ControlNumber",
+      "minLength": 9,
+      "maxLength": 9,
+      "dataType": "N"
+    },
+    {
+      "name": "ISA14",
+      "usage": "REQUIRED",
+      "description": "I13 acknowledgment requested",
+      "type": "Element",
+      "label": "AcknowledgmentRequested",
+      "minLength": 1,
+      "maxLength": 1,
+      "validCodes": [
+        "0",
+        "1"
+      ],
+      "dataType": "ID"
+    },
+    {
+      "name": "ISA15",
+      "usage": "REQUIRED",
+      "description": "I14 interchange usage indicator",
+      "type": "Element",
+      "label": "UsageIndicator",
+      "minLength": 1,
+      "maxLength": 1,
+      "validCodes": [
+        "P",
+        "T"
+      ],
+      "dataType": "ID"
+    },
+    {
+      "name": "ISA16",
+      "usage": "REQUIRED",
+      "description": "I15 component element separator",
+      "default": ":",
+      "type": "Element",
+      "label": "ComponentElementSeparator",
+      "minLength": 1,
+      "maxLength": 1,
+      "dataType": "AN"
+    }
+  ]
+}

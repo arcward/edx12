@@ -1,0 +1,53 @@
+{
+  "name": "ST",
+  "usage": "REQUIRED",
+  "description": "Transaction set header",
+  "type": "Segment",
+  "label": "header",
+  "repeatMax": 1,
+  "structure": [
+    {
+      "name": "ST01",
+      "usage": "REQUIRED",
+      "description": "Transaction set identifier code",
+      "type": "Element",
+      "label": "transactionSetCode",
+      "minLength": 3,
+      "maxLength": 3,
+      "dataType": "ID",
+      "validCodes": [
+        "270",
+        "271",
+        "276",
+        "277",
+        "278",
+        "820",
+        "834",
+        "835",
+        "837",
+        "997",
+        "999"
+      ]
+    },
+    {
+      "name": "ST02",
+      "usage": "REQUIRED",
+      "description": "Control number",
+      "type": "Element",
+      "label": "controlNumber",
+      "minLength": 4,
+      "maxLength": 9,
+      "dataType": "AN"
+    },
+    {
+      "name": "ST03",
+      "usage": "SITUATIONAL",
+      "description": "Implementation convention reference",
+      "type": "Element",
+      "label": "versionCode",
+      "minLength": 1,
+      "maxLength": 35,
+      "dataType": "AN"
+    }
+  ]
+}
