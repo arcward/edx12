@@ -1,7 +1,9 @@
 package edx12
 
 import (
+	"context"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -33,7 +35,29 @@ func replaceNewlines(t *testing.T, text []byte) string {
 func assertEqual[V comparable](t *testing.T, val V, expected V) {
 	t.Helper()
 	if val != expected {
-		t.Errorf("expected:\n%#v\n\ngot:\n%#v", expected, val)
+		t.Errorf(
+			"expected:\n%#v\n\ngot:\n%#v",
+			expected,
+			val,
+		)
+	}
+}
+
+func assertSlicesEqual[V comparable](t *testing.T, value []V, expected []V) {
+	t.Helper()
+	if len(value) != len(expected) {
+		t.Fatalf("expected %d elements, got %d", len(expected), len(value))
+	}
+
+	for i, v := range value {
+		if v != expected[i] {
+			t.Errorf(
+				"index %d: expected:\n%#v\n\ngot:\n%#v",
+				i,
+				expected,
+				value,
+			)
+		}
 	}
 }
 
@@ -86,7 +110,7 @@ func newSegment(
 				t.Fatalf("%v", e)
 			}
 
-			e = seg.Append(repNode)
+			e = seg.append(repNode)
 			if e != nil {
 				t.Fatalf("%v", e)
 			}
@@ -104,12 +128,12 @@ func newSegment(
 				if err != nil {
 					t.Fatalf("%v", err)
 				}
-				err = cmpNode.Append(subNode)
+				err = cmpNode.append(subNode)
 				if err != nil {
 					t.Fatalf("append error: %v", err)
 				}
 			}
-			e = seg.Append(cmpNode)
+			e = seg.append(cmpNode)
 			if e != nil {
 				t.Fatalf("append error: %v", e)
 			}
@@ -118,7 +142,7 @@ func newSegment(
 			if e != nil {
 				t.Fatalf("%v", e)
 			}
-			e = seg.Append(elemNode)
+			e = seg.append(elemNode)
 			if e != nil {
 				t.Fatalf("%v", e)
 			}
@@ -127,31 +151,9 @@ func newSegment(
 	return seg
 }
 
-func getSpec(
-	t *testing.T,
-	transactionSetCode string,
-	transactionSetVersion string,
-) *X12TransactionSetSpec {
-	t.Helper()
-	spec, err := findTransactionSpec(transactionSetCode, transactionSetVersion)
-	assertNoError(t, err)
-	if spec == nil {
-		t.Fatalf("Expected a spec, got nil")
-	}
-	if spec.TransactionSetCode != transactionSetCode {
-		t.Fatalf(
-			"Expected transaction set code to be %v, got %v",
-			transactionSetCode,
-			spec.TransactionSetCode,
-		)
-	}
-
-	return spec
-}
-
 func x271Spec(t *testing.T) *X12TransactionSetSpec {
 	t.Helper()
-	return getSpec(t, "271", "005010X279A1")
+	return X271v005010X279A1
 }
 
 // x271MessageUnmatchedSegment is the same as x271Message, but is missing
@@ -168,14 +170,69 @@ func x271MessageUnmatchedSegment(t *testing.T) []byte {
 	return file
 }
 
+func fileContent(t *testing.T, filename string) []byte {
+	t.Helper()
+	filePath := filepath.Join("testdata", filename)
+	file, err := os.ReadFile(filePath)
+	if err != nil {
+		t.Fatalf(
+			"unable to open file %s",
+			filePath,
+		)
+	}
+	return file
+}
+
+// x271Missing2100C is the same as x271Message, but is missing
+// the required 2100C loop
+func x271Missing2100C(t *testing.T) []byte {
+	t.Helper()
+	file, err := os.ReadFile("testdata/271_missing_2100C.txt")
+	if err != nil {
+		t.Fatalf(
+			"unable to open file %s",
+			"testdata/271_missing_2100C.txt",
+		)
+	}
+	return file
+}
+
+// x271Broken is the same as x271Message, but is missing
+// the required 2100C loop
+func x271Broken(t *testing.T) []byte {
+	t.Helper()
+	file, err := os.ReadFile("testdata/271_broken.txt")
+	if err != nil {
+		t.Fatalf(
+			"unable to open file %s",
+			"testdata/271_broken.txt",
+		)
+	}
+	return file
+}
+
+// x270MissingReceiverName is the same as x270Message, but is missing
+// the receiver name (NM103 in 2100B)
+func x270MissingReceiverName(t *testing.T) []byte {
+	t.Helper()
+	file, err := os.ReadFile("testdata/270_missing_receiver_name.txt")
+	if err != nil {
+		t.Fatalf(
+			"unable to open file %s",
+			"testdata/270_missing_receiver_name.txt",
+		)
+	}
+	return file
+}
+
 // x270MessageMismatchedControlNumbers is the same as x270Message, but
 // with all mismatched envelope control numbers, including:
 // - ST02/SE02
 // - GS05/GE02
 // - ISA13/IEA02
-func x270MessageMismatchedControlNumbers(t *testing.T) []byte {
+func x271MessageMismatchedControlNumbers(t *testing.T) []byte {
 	t.Helper()
-	filename := "testdata/270_mismatched_control_numbers.txt"
+	filename := "testdata/271_mismatched_control_numbers.txt"
 	file, err := os.ReadFile(filename)
 	if err != nil {
 		t.Fatalf("unable to open file %s", filename)
@@ -207,7 +264,7 @@ func assertSliceContains[V comparable](t *testing.T, row []V, expected V) {
 func assertNoError(t *testing.T, err error) {
 	t.Helper()
 	if err != nil {
-		t.Fatalf("expected no error, got: %v", err)
+		t.Errorf("expected no error, got: %v", err)
 	}
 }
 
@@ -215,8 +272,9 @@ func assertNoError(t *testing.T, err error) {
 // to reduce boilerplate.
 func unmarshalText(t *testing.T, messageText []byte) (msg *Message) {
 	t.Helper()
-	msg = NewMessage()
-	err := UnmarshalText(messageText, msg)
+	rawMessage, err := Read(messageText)
+	assertNoError(t, err)
+	msg, err = rawMessage.Message(context.Background())
 	assertNoError(t, err)
 	return msg
 }
@@ -228,4 +286,16 @@ func x270Message(t *testing.T) []byte {
 	file, err := os.ReadFile("testdata/270.txt")
 	assertNoError(t, err)
 	return file
+}
+
+func x270Spec(t *testing.T) *X12TransactionSetSpec {
+	t.Helper()
+	return X270v005010X279A1
+}
+
+func assertStringContains(t *testing.T, s string, contains string) {
+	t.Helper()
+	if !strings.Contains(s, contains) {
+		t.Errorf("expected: %q\nto contain: %q", s, contains)
+	}
 }

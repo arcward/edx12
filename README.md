@@ -22,10 +22,10 @@ Example message is from: https://x12.org/examples/005010x279/example-1b-response
 package main
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
+	"os"
 	"github.com/arcward/edx12"
-	"log"
 )
 
 func main() {
@@ -57,226 +57,247 @@ func main() {
 		GE*1*123456~
 		IEA*1*000031033~`
 	
-	// Load the message, print the ISA control number
-	message := edx12.NewMessage()
-	if err := edx12.UnmarshalText([]byte(messageText), message); err != nil {
-		log.Fatalf("err: %v", err)
-	}
-	// Prints 'ISA13: 000031033'
-	fmt.Printf("ISA13: %s\n", message.ControlNumber())
+	rawMessage, _ := edx12.Read([]byte(messageText))
+	message, _ := rawMessage.Message(context.Background())
 	
-	// Transform the transaction sets in the message and validate them, then
-	// print them out as JSON
-	for _, txn := range message.TransactionSets() {
-		err := txn.Transform()
-		if err != nil {
-			log.Fatalf("err: %v", err)
-		}
-		data, err := json.MarshalIndent(txn, "", "  ")
-		if err != nil {
-			log.Fatalf("err: %v", err)
-		}
-		// Prints '271/005010X279A1:' followed by the JSON
-		fmt.Printf(
-			"%s/%s:\n%s\n",
-			txn.TransactionSetCode,
-			txn.VersionCode,
-			string(data),
-		)
-	}
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetEscapeHTML(false)  // avoid '>' being escaped to '\u003e'
+	encoder.SetIndent("", "  ")
+	_ = encoder.Encode(message)
 }
 ```
 
-JSON output:
+Output:
 
 ```json
 {
-  "beginningOfHierarchicalTransaction": {
-    "Date": "20060501",
-    "Time": "1319",
-    "hierarchicalStructureCode": "0022",
-    "referenceIdentification": "10001234",
-    "transactionSetPurposeCode": "11"
-  },
-  "controlNumber": "1234",
-  "header": {
-    "controlNumber": "1234",
-    "transactionSetCode": "271",
-    "versionCode": "005010X279A1"
-  },
-  "informationSourceLevel": {
-    "informationReceiverLevel": {
-      "informationReceiverLevel": {
-        "hierarchicalChildCode": "1",
-        "hierarchicalIdNumber": "2",
-        "hierarchicalLevelCode": "21",
-        "hierarchicalParentIdNumber": "1"
+  "functionalGroups": [
+    {
+      "header": {
+        "applicationReceiverCode": "Sample Sen",
+        "applicationSenderCode": "Sample Rec",
+        "controlNumber": 123456,
+        "date": "2014-10-01T00:00:00Z",
+        "functionalIdentifierCode": "HB",
+        "responsibleAgencyCode": "X",
+        "time": "0000-01-01T10:37:00Z",
+        "versionCode": "005010X279A1"
       },
-      "informationReceiverName": {
-        "informationReceiverAdditionalIdentification": [],
-        "informationReceiverAddress": {},
-        "informationReceiverCityStateZipCode": {},
-        "informationReceiverName": {
-          "entityIdentifierCode": "1P",
-          "entityTypeQualifier": "2",
-          "identificationCode": "2000035",
-          "identificationCodeQualifier": "SV",
-          "nameFirst": "",
-          "nameLastOrOrganizationName": "BONE AND JOINT CLINIC",
-          "nameMiddle": "",
-          "nameSuffix": ""
-        },
-        "informationReceiverProviderInfo": {},
-        "informationReceiverRequestValidation": []
+      "trailer": {
+        "controlNumber": 123456,
+        "transactionSetCount": 1
       },
-      "subscriberLevel": {
-        "dependentLevel": {},
-        "subscriberLevel": {
-          "hierarchicalChildCode": "0",
-          "hierarchicalIdNumber": "3",
-          "hierarchicalLevelCode": "22",
-          "hierarchicalParentIdNumber": "2"
-        },
-        "subscriberName": {
-          "providerInfo": {},
-          "subscriberAdditionalIdentification": [],
-          "subscriberAddress": {
-            "addressInfo00": "15197 BROADWAY AVENUE",
-            "addressInfo01": "APT 215"
+      "transactionSets": [
+        {
+          "beginningOfHierarchicalTransaction": {
+            "Date": "2006-05-01T00:00:00Z",
+            "Time": "0000-01-01T13:19:00Z",
+            "hierarchicalStructureCode": "0022",
+            "referenceIdentification": "10001234",
+            "transactionSetPurposeCode": "11"
           },
-          "subscriberCityStateZipCode": {
-            "cityName": "KANSAS CITY",
-            "countryCode": "",
-            "countrySubdivisionCode": "",
-            "postalCode": "64108",
-            "stateOrProvinceCode": "MO"
+          "header": {
+            "controlNumber": "1234",
+            "transactionSetCode": "271",
+            "versionCode": "005010X279A1"
           },
-          "subscriberDate": [
-            {
-              "dateTimePeriod": "20060101",
-              "dateTimePeriodFormatQualifier": "D8",
-              "dateTimeQualifier": "346"
-            }
-          ],
-          "subscriberDemographicInfo": {
-            "dateTimePeriod": "19630519",
-            "dateTimePeriodFormatQualifier": "D8",
-            "genderCode": "M"
-          },
-          "subscriberEligibilityOrBenefitInfo": {
-            "healthCareServicesDelivery": [],
-            "loopHeader": {
-              "loopIdentifierCode": "2120"
-            },
-            "messageText": [],
-            "subscriberAdditionalIdentification": [],
-            "subscriberBenefitRelatedEntityName": [
-              {
-                "loopTrailer": {
-                  "loopIdentifierCode": "2120"
-                },
-                "subscriberBenefitRelatedEntityAddress": {},
-                "subscriberBenefitRelatedEntityCityStateZipCode": {},
-                "subscriberBenefitRelatedEntityContactInfo": [],
-                "subscriberBenefitRelatedEntityName": {
-                  "entityIdentifierCode": "P3",
-                  "entityRelationshipCode": "",
-                  "entityTypeQualifier": "1",
-                  "identificationCode": "0202034",
+          "informationSourceLevel": {
+            "informationReceiverLevel": {
+              "informationReceiverLevel": {
+                "hierarchicalChildCode": "1",
+                "hierarchicalIdNumber": "2",
+                "hierarchicalLevelCode": "21",
+                "hierarchicalParentIdNumber": "1"
+              },
+              "informationReceiverName": {
+                "informationReceiverAdditionalIdentification": [],
+                "informationReceiverAddress": {},
+                "informationReceiverCityStateZipCode": {},
+                "informationReceiverName": {
+                  "entityIdentifierCode": "1P",
+                  "entityTypeQualifier": "2",
+                  "identificationCode": "2000035",
                   "identificationCodeQualifier": "SV",
-                  "nameFirst": "MARCUS",
-                  "nameLastOrOrganizationName": "JONES",
+                  "nameFirst": "",
+                  "nameLastOrOrganizationName": "BONE AND JOINT CLINIC",
                   "nameMiddle": "",
                   "nameSuffix": ""
                 },
-                "subscriberBenefitRelatedProviderInfo": {}
+                "informationReceiverProviderInfo": {},
+                "informationReceiverRequestValidation": []
+              },
+              "subscriberLevel": {
+                "dependentLevel": {},
+                "subscriberLevel": {
+                  "hierarchicalChildCode": "0",
+                  "hierarchicalIdNumber": "3",
+                  "hierarchicalLevelCode": "22",
+                  "hierarchicalParentIdNumber": "2"
+                },
+                "subscriberName": {
+                  "providerInfo": {},
+                  "subscriberAdditionalIdentification": [],
+                  "subscriberAddress": {
+                    "addressInfo00": "15197 BROADWAY AVENUE",
+                    "addressInfo01": "APT 215"
+                  },
+                  "subscriberCityStateZipCode": {
+                    "cityName": "KANSAS CITY",
+                    "countryCode": "",
+                    "countrySubdivisionCode": "",
+                    "postalCode": "64108",
+                    "stateOrProvinceCode": "MO"
+                  },
+                  "subscriberDate": [
+                    {
+                      "dateTimePeriod": "20060101",
+                      "dateTimePeriodFormatQualifier": "D8",
+
+                      "dateTimeQualifier": "346"
+                    }
+                  ],
+                  "subscriberDemographicInfo": {
+                    "dateTimePeriod": "19630519",
+                    "dateTimePeriodFormatQualifier": "D8",
+                    "genderCode": "M"
+                  },
+                  "subscriberEligibilityOrBenefitInfo": {
+                    "healthCareServicesDelivery": [],
+                    "loopHeader": {
+                      "loopIdentifierCode": "2120"
+                    },
+                    "messageText": [],
+                    "subscriberAdditionalIdentification": [],
+                    "subscriberBenefitRelatedEntityName": [
+                      {
+                        "loopTrailer": {
+                          "loopIdentifierCode": "2120"
+                        },
+                        "subscriberBenefitRelatedEntityAddress": {},
+                        "subscriberBenefitRelatedEntityCityStateZipCode": {},
+                        "subscriberBenefitRelatedEntityContactInfo": [],
+                        "subscriberBenefitRelatedEntityName": {
+                          "entityIdentifierCode": "P3",
+                          "entityRelationshipCode": "",
+                          "entityTypeQualifier": "1",
+                          "identificationCode": "0202034",
+                          "identificationCodeQualifier": "SV",
+                          "nameFirst": "MARCUS",
+                          "nameLastOrOrganizationName": "JONES",
+                          "nameMiddle": "",
+                          "nameSuffix": ""
+                        },
+                        "subscriberBenefitRelatedProviderInfo": {}
+                      }
+                    ],
+                    "subscriberEligibilityBenefitDate": [],
+                    "subscriberEligibilityOrBenefitAdditionalInfo": [],
+                    "subscriberEligibilityOrBenefitInfo": {
+                      "compositeDiagnosisCodePointer": {},
+                      "compositeMedicalProcedureIdentifier": {},
+                      "coverageLevelCode": "",
+                      "eligibilityOrBenefitInfoCode": "B",
+                      "insuranceTypeCode": "HM",
+                      "monetaryAmount": 30,
+                      "percentageAsDecimal": null,
+                      "planCoverageDescription": "GOLD 123 PLAN",
+                      "quantity": null,
+                      "quantityQualifier": "",
+                      "serviceTypeCode": [
+                        "1",
+                        "33",
+                        "35",
+                        "47",
+                        "86",
+                        "88",
+                        "98",
+                        "AL",
+                        "MH",
+                        "UC"
+                      ],
+                      "timePeriodQualifier": "27",
+                      "yesNoConditionOrResponseCode00": "",
+                      "yesNoConditionOrResponseCode01": "N"
+                    },
+                    "subscriberRequestValidation": []
+                  },
+                  "subscriberHealthCareDiagnosisCode": {},
+                  "subscriberMilitaryPersonnelInfo": {},
+                  "subscriberName": {
+                    "entityIdentifierCode": "IL",
+                    "entityTypeQualifier": "1",
+                    "identificationCode": "123456789",
+                    "identificationCodeQualifier": "MI",
+                    "nameFirst": "JOHN",
+                    "nameLastOrOrganizationName": "SMITH",
+                    "nameMiddle": "",
+                    "nameSuffix": ""
+                  },
+                  "subscriberRelationship": {},
+                  "subscriberRequestValidation": []
+                },
+                "subscriberTraceNumber": [
+                  {
+                    "originatingCompanyIdentifier": "9877281234",
+                    "referenceIdentification00": "93175-012547",
+                    "referenceIdentification01": "",
+                    "traceTypeCode": "2"
+                  }
+                ]
               }
-            ],
-            "subscriberEligibilityBenefitDate": [],
-            "subscriberEligibilityOrBenefitAdditionalInfo": [],
-            "subscriberEligibilityOrBenefitInfo": {
-              "Quantity": "",
-              "compositeDiagnosisCodePointer": {},
-              "compositeMedicalProcedureIdentifier": {},
-              "coverageLevelCode": "",
-              "eligibilityOrBenefitInfoCode": "B",
-              "insuranceTypeCode": "HM",
-              "monetaryAmount": "30",
-              "percentageAsDecimal": "",
-              "planCoverageDescription": "GOLD 123 PLAN",
-              "quantityQualifier": "",
-              "serviceTypeCode": [
-                "1",
-                "33",
-                "35",
-                "47",
-                "86",
-                "88",
-                "98",
-                "AL",
-                "MH",
-                "UC"
-              ],
-              "timePeriodQualifier": "27",
-              "yesNoConditionOrResponseCode00": "",
-              "yesNoConditionOrResponseCode01": "N"
             },
-            "subscriberRequestValidation": []
+            "informationSourceLevel": {
+              "hierarchicalChildCode": "1",
+              "hierarchicalIdNumber": "1",
+              "hierarchicalLevelCode": "20"
+            },
+            "informationSourceName": {
+              "informationSourceContactInfo": [],
+              "informationSourceName": {
+                "entityIdentifierCode": "PR",
+                "entityTypeQualifier": "2",
+                "identificationCode": "842610001",
+                "identificationCodeQualifier": "PI",
+                "nameFirst": "",
+                "nameLastOrOrganizationName": "ABC COMPANY",
+
+                "nameMiddle": "",
+                "nameSuffix": ""
+              },
+              "requestValidation": []
+            },
+            "requestValidation": []
           },
-          "subscriberHealthCareDiagnosisCode": {},
-          "subscriberMilitaryPersonnelInfo": {},
-          "subscriberName": {
-            "entityIdentifierCode": "IL",
-            "entityTypeQualifier": "1",
-            "identificationCode": "123456789",
-            "identificationCodeQualifier": "MI",
-            "nameFirst": "JOHN",
-            "nameLastOrOrganizationName": "SMITH",
-            "nameMiddle": "",
-            "nameSuffix": ""
-          },
-          "subscriberRelationship": {},
-          "subscriberRequestValidation": []
-        },
-        "subscriberTraceNumber": [
-          {
-            "originatingCompanyIdentifier": "9877281234",
-            "referenceIdentification00": "93175-012547",
-            "referenceIdentification01": "",
-            "traceTypeCode": "2"
+          "trailer": {
+            "controlNumber": "1234",
+            "segmentCount": 22
           }
-        ]
-      }
-    },
-    "informationSourceLevel": {
-      "hierarchicalChildCode": "1",
-      "hierarchicalIdNumber": "1",
-      "hierarchicalLevelCode": "20"
-    },
-    "informationSourceName": {
-      "informationSourceContactInfo": [],
-      "informationSourceName": {
-        "entityIdentifierCode": "PR",
-        "entityTypeQualifier": "2",
-        "identificationCode": "842610001",
-        "identificationCodeQualifier": "PI",
-        "nameFirst": "",
-        "nameLastOrOrganizationName": "ABC COMPANY",
-        "nameMiddle": "",
-        "nameSuffix": ""
-      },
-      "requestValidation": []
-    },
-    "requestValidation": []
+        }
+      ]
+    }
+  ],
+  "header": {
+    "acknowledgmentRequested": "0",
+    "authorizationInformation": "Authorizat",
+    "authorizationQualifier": "00",
+    "componentElementSeparator": ":",
+    "controlNumber": 31033,
+    "controlVersionNumber": "00501",
+    "date": "2014-10-01T00:00:00Z",
+    "receiverId": "Interchange Sen",
+    "receiverIdQualifier": "ZZ",
+    "repetitionSeparator": ">",
+    "securityInformation": "Security  ",
+    "securityInformationQualifier": "00",
+    "senderId": "Interchange Rec",
+    "senderIdQualifier": "ZZ",
+    "time": "0000-01-01T10:37:00Z",
+    "usageIndicator": "T"
   },
   "trailer": {
-    "controlNumber": "1234",
-    "segmentCount": "22"
-  },
-  "transactionSetCode": "271",
-  "version": "005010X279A1"
+    "controlNumber": 31033,
+    "functionalGroupCount": 1
+  }
 }
-
 ```
-
 
